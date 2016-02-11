@@ -1,14 +1,14 @@
-
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"crypto/rsa"
-	"crypto/rand"
-	"math/big"
 	"io/ioutil"
 	"log"
+	"math/big"
+	"net"
 	"time"
 )
 
@@ -16,17 +16,28 @@ func main() {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(1653),
 		Subject: pkix.Name{
-			Country: []string{"China"},
-			Organization: []string{"Yjwt"},
-			OrganizationalUnit: []string{"YjwtU"},
+			Country:            []string{"Hobbitsville"},
+			Organization:       []string{"Bilbo"},
+			OrganizationalUnit: []string{"Babbins"},
+			Locality:           []string{"ca-locality"},
+			Province:           []string{"ca-province"},
+			StreetAddress:      []string{"ca-streetaddr"},
+			PostalCode:         []string{"ca-postalcode"},
+			SerialNumber:       "ca-serial",
+			CommonName:         "ca-commonName",
+			//Names      []AttributeTypeAndValue
+			//ExtraNames []AttributeTypeAndValue
 		},
-		NotBefore: time.Now(),
-		NotAfter: time.Now().AddDate(10,0,0),
-		SubjectKeyId: []byte{1,2,3,4,5},
+		//DNSNames:              []string{"0.0.0.0"},
+		//IPAddresses:           []net.IP{[]byte{127, 0, 0, 1}},
+		IPAddresses:           []net.IP{[]byte{0, 0, 0, 0}, []byte{127, 0, 0, 1}},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().AddDate(10, 0, 0),
+		SubjectKeyId:          []byte{1, 2, 3, 4, 5},
 		BasicConstraintsValid: true,
-		IsCA: true,
+		IsCA:        true,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-		KeyUsage: x509.KeyUsageDigitalSignature|x509.KeyUsageCertSign,
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 	}
 
 	priv, _ := rsa.GenerateKey(rand.Reader, 1024)
@@ -48,15 +59,24 @@ func main() {
 	cert2 := &x509.Certificate{
 		SerialNumber: big.NewInt(1658),
 		Subject: pkix.Name{
-			Country: []string{"China"},
-			Organization: []string{"Fuck"},
-			OrganizationalUnit: []string{"FuckU"},
+			Country:            []string{"Narnia"},
+			Organization:       []string{"Whizard"},
+			OrganizationalUnit: []string{"Druids"},
+			Locality:           []string{"client-locality"},
+			Province:           []string{"client-province"},
+			StreetAddress:      []string{"client-streetaddr"},
+			PostalCode:         []string{"client-postalcode"},
+			SerialNumber:       "client-serial",
+			CommonName:         "client-commonName",
+			//Names      []AttributeTypeAndValue
+			//ExtraNames []AttributeTypeAndValue
 		},
-		NotBefore: time.Now(),
-		NotAfter: time.Now().AddDate(10,0,0),
-		SubjectKeyId: []byte{1,2,3,4,6},
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-		KeyUsage: x509.KeyUsageDigitalSignature|x509.KeyUsageCertSign,
+		DNSNames:     []string{"0.0.0.0"},
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().AddDate(10, 0, 0),
+		SubjectKeyId: []byte{1, 2, 3, 4, 6},
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 	}
 	priv2, _ := rsa.GenerateKey(rand.Reader, 1024)
 	pub2 := &priv2.PublicKey
@@ -81,4 +101,3 @@ func main() {
 	err3 := cert2_c.CheckSignatureFrom(ca_c)
 	log.Println("check signature", err3 == nil)
 }
-

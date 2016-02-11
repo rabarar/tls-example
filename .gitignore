@@ -1,3 +1,8 @@
 *.key
 *.pem
 *.swp
+
+client
+gen
+server
+verify.go

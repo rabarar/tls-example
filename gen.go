@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -25,8 +26,8 @@ func main() {
 			PostalCode:         []string{"ca-postalcode"},
 			SerialNumber:       "ca-serial",
 			CommonName:         "ca-commonName",
-			//Names      []AttributeTypeAndValue
-			//ExtraNames []AttributeTypeAndValue
+			Names:              addASN1Names(1, 3, 6, 1),
+			ExtraNames:         addASN1Names(1, 3, 6, 2),
 		},
 		//DNSNames:              []string{"0.0.0.0"},
 		//IPAddresses:           []net.IP{[]byte{127, 0, 0, 1}},
@@ -100,4 +101,21 @@ func main() {
 
 	err3 := cert2_c.CheckSignatureFrom(ca_c)
 	log.Println("check signature", err3 == nil)
+}
+
+func addASN1Names(x ...int) []pkix.AttributeTypeAndValue {
+	var asn1Vals pkix.AttributeTypeAndValue
+	var daytime interface{}
+
+	if true {
+		daytime = "hi there ASN1"
+	} else {
+		daytime = time.Now()
+		// Ignore return network errors.
+	}
+	mdata, _ := asn1.Marshal(daytime)
+	asn1Vals.Type = x
+	asn1Vals.Value = mdata
+
+	return []pkix.AttributeTypeAndValue{asn1Vals}
 }

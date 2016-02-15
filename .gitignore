@@ -7,5 +7,6 @@ gen
 server
 dec
 enc
+b64
 
 verify.go

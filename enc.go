@@ -5,15 +5,21 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
-const (
-	secretMsg = "happy days are here again!!!"
-)
+const ()
 
 func main() {
-	blockType := "RSA PRIVATE KEY"
+
+	secretMsg, err := ioutil.ReadFile("cert2.pem")
+	if err != nil {
+		fmt.Printf("ReadFile: %s\n", err)
+		os.Exit(1)
+	}
+
+	blockType := "ENCRYPTED PRIVATE KEY"
 	password := []byte("password")
 
 	// see http://golang.org/pkg/crypto/x509/#pkg-constants
@@ -32,29 +38,25 @@ func main() {
 
 	sDec := base64.StdEncoding.EncodeToString(EncryptedPEMBlock.Bytes)
 	bs := len(sDec)
+
+	// fmt.Printf("raw[%d]:\n%q\n", bs, sDec)
 	fmt.Printf("-----BEGIN %s-----\n", blockType)
 	for k, v := range EncryptedPEMBlock.Headers {
 		fmt.Printf("%s: %s\n", k, v)
 	}
 	fmt.Printf("\n")
 
-	for i := 0; i < bs; i++ {
-		if i+64 < bs {
-			for j := i; j < i+64; j++ {
-				fmt.Printf("%c", sDec[j])
-			}
-			fmt.Printf("\n")
-			i += 64
-		} else {
-			//fmt.Printf("i = %d\n", i)
-			for j := 0; j < bs-i; j++ {
-				fmt.Printf("%c", sDec[i+j])
-			}
-			fmt.Printf("\n")
+	nblks := bs / 64
+	rem := bs % 64
 
-			break
-		}
+	// fmt.Printf("nBlks = %d, rem = %d\n", nblks, rem)
+
+	for i := 0; i < nblks; i++ {
+		fmt.Printf("%s\n", sDec[i*64:(i+1)*64])
 	}
+
+	// write the remaining bs-((nblks)*64)
+	fmt.Printf("%s\n", sDec[bs-rem:])
 
 	fmt.Printf("-----END %s-----\n", blockType)
 }

@@ -16,10 +16,9 @@ import (
 const ()
 
 type PEM struct {
-	raw      string
-	scanner  *bufio.Scanner
-	Headers  map[string]string
-	lastLine string
+	raw     string
+	scanner *bufio.Scanner
+	Headers map[string]string
 }
 
 func (p *PEM) getLine() (string, error) {

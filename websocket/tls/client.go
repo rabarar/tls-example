@@ -11,37 +11,48 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var originStr = "http://127.0.0.1/"
-var urlStr = "wss://127.0.0.1:8080/echo"
+const (
+	ADD_CERT_POOL   = true
+	USE_CLIENT_CERT = true
+)
 
 func main() {
+
+	var originStr = "http://127.0.0.1/"
+	var urlStr = "wss://127.0.0.1:8080/echo"
+	var tlsConfig = tls.Config{}
 
 	locationURL, _ := url.Parse(urlStr)
 	originURL, _ := url.Parse(originStr)
 
 	// Load CA cert
-	cert2_b, _ := ioutil.ReadFile("client_cert.raw")
-	priv2_b, _ := ioutil.ReadFile("client_key.raw")
-	priv2, _ := x509.ParsePKCS1PrivateKey(priv2_b)
+	if USE_CLIENT_CERT {
+		cert2_b, _ := ioutil.ReadFile("client_cert.raw")
+		priv2_b, _ := ioutil.ReadFile("client_key.raw")
+		priv2, _ := x509.ParsePKCS1PrivateKey(priv2_b)
 
-	cert := tls.Certificate{
-		Certificate: [][]byte{cert2_b},
-		PrivateKey:  priv2,
+		cert := tls.Certificate{
+			Certificate: [][]byte{cert2_b},
+			PrivateKey:  priv2,
+		}
+
+		tlsConfig = tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}
 	}
 
-	roots := x509.NewCertPool()
-	pem_ca, err := ioutil.ReadFile("ca_cert.raw")
-	pem, _ := x509.ParseCertificate(pem_ca)
-	if err != nil {
-		panic("failed to read CA pem")
-	}
+	if ADD_CERT_POOL {
+		roots := x509.NewCertPool()
+		pem_ca, err := ioutil.ReadFile("ca_cert.raw")
+		pem, _ := x509.ParseCertificate(pem_ca)
+		if err != nil {
+			panic("failed to read CA pem")
+		}
 
-	roots.AddCert(pem)
+		roots.AddCert(pem)
+		tlsConfig.InsecureSkipVerify = false
+		tlsConfig.RootCAs = roots
 
-	var tlsConfig = tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		InsecureSkipVerify: false,
-		RootCAs:            roots,
 	}
 
 	var wsConfig = websocket.Config{

@@ -72,7 +72,7 @@ func main() {
 		go func() {
 
 			var tlsConfig tls.Config = tls.Config{
-				InsecureSkipVerify: true,
+			//InsecureSkipVerify: true,
 			}
 
 			var server http.Server = http.Server{

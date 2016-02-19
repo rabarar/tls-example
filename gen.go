@@ -43,8 +43,8 @@ func main() {
 			PostalCode:         []string{"ca-postalcode"},
 			SerialNumber:       "ca-serial",
 			CommonName:         "ca-commonName",
-			Names:              addASN1Names(1, 3, 6, 1),
-			ExtraNames:         addASN1Names(1, 3, 6, 2),
+			//Names:              addASN1Names(1, 3, 6, 1),
+			//ExtraNames:         addASN1Names(1, 3, 6, 2),
 		},
 		//DNSNames:              []string{"0.0.0.0"},
 		IPAddresses:           []net.IP{[]byte{0, 0, 0, 0}, []byte{127, 0, 0, 1}},
@@ -136,6 +136,7 @@ func main() {
 	log.Println("check signature", err3 == nil)
 }
 
+// TODO - openssl wont convert if ASN's are added
 func addASN1Names(x ...int) []pkix.AttributeTypeAndValue {
 	var asn1Vals pkix.AttributeTypeAndValue
 	var daytime interface{}

@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	cert2_b, _ := ioutil.ReadFile("cert2.pem")
-	priv2_b, _ := ioutil.ReadFile("cert2.key")
+	cert2_b, _ := ioutil.ReadFile("client_cert.raw")
+	priv2_b, _ := ioutil.ReadFile("client_key.raw")
 	priv2, _ := x509.ParsePKCS1PrivateKey(priv2_b)
 
 	cert := tls.Certificate{
@@ -20,7 +20,7 @@ func main() {
 	}
 
 	roots := x509.NewCertPool()
-	pem_ca, err := ioutil.ReadFile("ca.pem")
+	pem_ca, err := ioutil.ReadFile("ca_cert.raw")
 	pem, _ := x509.ParseCertificate(pem_ca)
 	if err != nil {
 		panic("failed to read CA pem")

@@ -11,9 +11,9 @@ import (
 
 func main() {
 
-	ca_b, _ := ioutil.ReadFile("ca.pem")
+	ca_b, _ := ioutil.ReadFile("ca_cert.raw")
 	ca, _ := x509.ParseCertificate(ca_b)
-	priv_b, _ := ioutil.ReadFile("ca.key")
+	priv_b, _ := ioutil.ReadFile("ca_key.raw")
 	priv, _ := x509.ParsePKCS1PrivateKey(priv_b)
 
 	pool := x509.NewCertPool()

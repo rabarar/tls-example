@@ -98,7 +98,9 @@ func main() {
 			//Names      []AttributeTypeAndValue
 			//ExtraNames []AttributeTypeAndValue
 		},
-		DNSNames:     []string{"0.0.0.0"},
+		//	DNSNames: []string{"0.0.0.0"},
+		IPAddresses:  []net.IP{[]byte{0, 0, 0, 0}, []byte{127, 0, 0, 1}},
+		DNSNames:     []string{"localhost", "127.0.0.1"},
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(10, 0, 0),
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},

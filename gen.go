@@ -18,8 +18,8 @@ type PEMType string
 
 const (
 	PEM_CERTIFICATE PEMType = "CERTIFICATE"
-	PEM_PRIVATE_KEY PEMType = "PRIVATE KEY"
-	PEM_PUBLICE_KEY PEMType = "PUBLIC KEY"
+	PEM_PRIVATE_KEY PEMType = "RSA PRIVATE KEY"
+	PEM_PUBLICE_KEY PEMType = "RSA PUBLIC KEY"
 
 	PUB_PERMS  = 0666
 	PRIV_PERMS = 0400
@@ -47,7 +47,6 @@ func main() {
 			ExtraNames:         addASN1Names(1, 3, 6, 2),
 		},
 		//DNSNames:              []string{"0.0.0.0"},
-		//IPAddresses:           []net.IP{[]byte{127, 0, 0, 1}},
 		IPAddresses:           []net.IP{[]byte{0, 0, 0, 0}, []byte{127, 0, 0, 1}},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(10, 0, 0),

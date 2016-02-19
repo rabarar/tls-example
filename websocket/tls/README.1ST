@@ -1,0 +1,7 @@
+A few notes.
+
+The ../../tls-example/gen program generates Certificates - both CA/Server and client
+
+THERE's SOMETHING WRONG WITH THE PEM CERTS - GENERATE A PEM CERT BY CONVERTING THE RAW CERT TO PEM VIA SSL
+
+$ openssl x509 -inform der -in certificate.raw -out certificate.pem

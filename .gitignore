@@ -8,5 +8,7 @@ server
 dec
 enc
 b64
+websocket/nonTLS/pkg
+websocket/tls/pkg/
 
 verify.go

@@ -1,6 +1,8 @@
 *.key
 *.pem
 *.swp
+*.pem
+*.raw
 
 client
 gen
@@ -8,6 +10,8 @@ server
 dec
 enc
 b64
+conv
+encmem
 websocket/nonTLS/pkg
 websocket/tls/pkg/
 

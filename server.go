@@ -8,34 +8,44 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
+	"time"
+)
+
+const (
+	RAW_EXTENSION = ".raw"
+	PEM_EXTENSION = ".pem"
 )
 
 func main() {
 
-	flgCACert := flag.String("ca", "ca_cert.raw", "certificate auth raw cert file")
-	flgCAKey := flag.String("key", "ca_key.raw", "certificate  raw key file")
+	var useTLS bool
+	flgCACert := flag.String("ca", "ca_cert", "certificate auth cert file prefix (without .raw or .pem)")
+	flgCAKey := flag.String("key", "ca_key", "certificate  key file prefix (without .raw or .pem)")
+	flag.BoolVar(&useTLS, "tls", false, "use tls if true or https")
 
 	flag.Parse()
 
-	ca_b, err := ioutil.ReadFile(*flgCACert)
+	// Read RAW Cert
+	ca_b, err := ioutil.ReadFile(*flgCACert + RAW_EXTENSION)
 	if err != nil {
-		log.Printf("failed to read %s: %s\n", *flgCACert, err)
+		log.Printf("failed to read %s: %s\n", *flgCACert+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
 	ca, err := x509.ParseCertificate(ca_b)
 	if err != nil {
-		log.Printf("failed to parse %s: %s\n", *flgCACert, err)
+		log.Printf("failed to parse %s: %s\n", *flgCACert+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
-	priv_b, err := ioutil.ReadFile(*flgCAKey)
+	priv_b, err := ioutil.ReadFile(*flgCAKey + RAW_EXTENSION)
 	if err != nil {
-		log.Printf("failed to read %s: %s\n", *flgCAKey, err)
+		log.Printf("failed to read %s: %s\n", *flgCAKey+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
 	priv, err := x509.ParsePKCS1PrivateKey(priv_b)
 	if err != nil {
-		log.Printf("failed to parse %s: %s\n", *flgCAKey, err)
+		log.Printf("failed to parse %s: %s\n", *flgCAKey+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
 
@@ -53,22 +63,60 @@ func main() {
 		ClientCAs:    pool,
 	}
 	config.Rand = rand.Reader
-	service := "0.0.0.0:8443"
-	listener, err := tls.Listen("tcp", service, &config)
-	if err != nil {
-		log.Fatalf("server: listen: %s", err)
-	}
-	log.Print("server: listening")
 
-	for {
-		conn, err := listener.Accept()
+	if useTLS {
+		service := "0.0.0.0:8443"
+		listener, err := tls.Listen("tcp", service, &config)
 		if err != nil {
-			log.Printf("server: accept: %s", err)
-			break
+			log.Fatalf("server: listen: %s", err)
 		}
-		defer conn.Close()
-		log.Printf("server: accepted from %s", conn.RemoteAddr())
-		go handleClient(conn)
+		log.Print("TLS server: listening")
+
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				log.Printf("server: accept: %s", err)
+				break
+			}
+			defer conn.Close()
+			log.Printf("server: accepted from %s", conn.RemoteAddr())
+			go handleClient(conn)
+		}
+	} else {
+		s := &http.Server{
+			Addr:           "0.0.0.0:8443",
+			Handler:        nil,
+			ReadTimeout:    10 * time.Second,
+			WriteTimeout:   10 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+			TLSConfig:      &config,
+			ConnState:      stateMonitor,
+		}
+
+		log.Printf("HTTP TLS server: listening with Cert:%s, Key:%s\n", *flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+		err := s.ListenAndServeTLS(*flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+		if err != nil {
+			log.Printf("failed to ListenAndServerTLS: %s\n", err)
+		}
+	}
+}
+func handleHTTPClient(w http.ResponseWriter, r *http.Request) {
+}
+
+var stateToLabel = map[http.ConnState]string{
+	http.StateNew:      "New",
+	http.StateActive:   "Active",
+	http.StateIdle:     "Idle",
+	http.StateHijacked: "Hijacked",
+	http.StateClosed:   "Closed",
+}
+
+func stateMonitor(conn net.Conn, state http.ConnState) {
+	label, ok := stateToLabel[state]
+	if ok {
+		log.Printf(">>> state change[%q]: %s\n", state, label)
+	} else {
+		log.Printf(">>> state change[%q]: UNKNOWN\n")
 	}
 }
 
@@ -93,9 +141,9 @@ func handleClient(conn net.Conn) {
 		}
 
 		log.Printf("server: conn: echo %q\n", string(buf[:n]))
-		n, err = conn.Write(buf[:n])
 
-		n, err = conn.Write(buf[:n])
+		//n, err = conn.Write(buf[:n])
+		n, err = conn.Write([]byte("<html><head><title>Done!</title></head><body><H1>Hi there!</H1></Body></HTML>"))
 		log.Printf("server: conn: wrote %d bytes", n)
 
 		if err != nil {

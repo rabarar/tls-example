@@ -3,16 +3,36 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 func main() {
-	cert2_b, _ := ioutil.ReadFile("client_cert.raw")
-	priv2_b, _ := ioutil.ReadFile("client_key.raw")
-	priv2, _ := x509.ParsePKCS1PrivateKey(priv2_b)
+	flgCACert := flag.String("ca", "ca_cert.raw", "client raw cert file")
+	flgClientCert := flag.String("cert", "client_cert.raw", "client raw cert file")
+	flgClientKey := flag.String("key", "client_key.raw", "client key file")
+
+	flag.Parse()
+
+	cert2_b, err := ioutil.ReadFile(*flgClientCert)
+	if err != nil {
+		log.Printf("failed to read %s: %s\n", *flgClientCert, err)
+		os.Exit(1)
+	}
+	priv2_b, err := ioutil.ReadFile(*flgClientKey)
+	if err != nil {
+		log.Printf("failed to read %s: %s\n", *flgClientKey, err)
+		os.Exit(1)
+	}
+	priv2, err := x509.ParsePKCS1PrivateKey(priv2_b)
+	if err != nil {
+		log.Printf("failed to parse %s: %s\n", *flgClientKey, err)
+		os.Exit(1)
+	}
 
 	cert := tls.Certificate{
 		Certificate: [][]byte{cert2_b},
@@ -20,10 +40,15 @@ func main() {
 	}
 
 	roots := x509.NewCertPool()
-	pem_ca, err := ioutil.ReadFile("ca_cert.raw")
-	pem, _ := x509.ParseCertificate(pem_ca)
+	pem_ca, err := ioutil.ReadFile(*flgCACert)
 	if err != nil {
-		panic("failed to read CA pem")
+		log.Printf("failed to read %s: %s\n", *flgCACert, err)
+		os.Exit(1)
+	}
+	pem, err := x509.ParseCertificate(pem_ca)
+	if err != nil {
+		log.Printf("failed to Parse Cert %s: %s\n", *flgCACert, err)
+		os.Exit(1)
 	}
 
 	roots.AddCert(pem)

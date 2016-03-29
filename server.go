@@ -4,17 +4,40 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
 )
 
 func main() {
 
-	ca_b, _ := ioutil.ReadFile("ca_cert.raw")
-	ca, _ := x509.ParseCertificate(ca_b)
-	priv_b, _ := ioutil.ReadFile("ca_key.raw")
-	priv, _ := x509.ParsePKCS1PrivateKey(priv_b)
+	flgCACert := flag.String("ca", "ca_cert.raw", "certificate auth raw cert file")
+	flgCAKey := flag.String("key", "ca_key.raw", "certificate  raw key file")
+
+	flag.Parse()
+
+	ca_b, err := ioutil.ReadFile(*flgCACert)
+	if err != nil {
+		log.Printf("failed to read %s: %s\n", *flgCACert, err)
+		os.Exit(1)
+	}
+	ca, err := x509.ParseCertificate(ca_b)
+	if err != nil {
+		log.Printf("failed to parse %s: %s\n", *flgCACert, err)
+		os.Exit(1)
+	}
+	priv_b, err := ioutil.ReadFile(*flgCAKey)
+	if err != nil {
+		log.Printf("failed to read %s: %s\n", *flgCAKey, err)
+		os.Exit(1)
+	}
+	priv, err := x509.ParsePKCS1PrivateKey(priv_b)
+	if err != nil {
+		log.Printf("failed to parse %s: %s\n", *flgCAKey, err)
+		os.Exit(1)
+	}
 
 	pool := x509.NewCertPool()
 	pool.AddCert(ca)

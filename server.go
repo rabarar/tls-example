@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
+	"fmt"
+	"html"
 	"io/ioutil"
 	"log"
 	"net"
@@ -94,13 +96,17 @@ func main() {
 		}
 
 		log.Printf("HTTP TLS server: listening with Cert:%s, Key:%s\n", *flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+
+		// add handler to default service mux
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+		})
+
 		err := s.ListenAndServeTLS(*flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
 		if err != nil {
 			log.Printf("failed to ListenAndServerTLS: %s\n", err)
 		}
 	}
-}
-func handleHTTPClient(w http.ResponseWriter, r *http.Request) {
 }
 
 var stateToLabel = map[http.ConnState]string{
@@ -112,12 +118,34 @@ var stateToLabel = map[http.ConnState]string{
 }
 
 func stateMonitor(conn net.Conn, state http.ConnState) {
+
 	label, ok := stateToLabel[state]
 	if ok {
 		log.Printf(">>> state change[%q]: %s\n", state, label)
 	} else {
 		log.Printf(">>> state change[%q]: UNKNOWN\n")
 	}
+
+	tlscon, ok := conn.(*tls.Conn)
+	if ok {
+		tlsState := tlscon.ConnectionState()
+
+		/*
+			if len(tlsState.PeerCertificates) > 0 {
+				sub := tlsState.PeerCertificates[0].Subject
+				log.Printf("Connection from CertSubject: %V\n", sub)
+			}
+		*/
+
+		for i := 0; i < len(tlsState.VerifiedChains); i++ {
+			if len(tlsState.VerifiedChains[i]) > 0 {
+				for j := 0; j < len(tlsState.VerifiedChains[i]); j++ {
+					log.Printf("VerifiedChain[%d] Cert[%d]: %s\n", i, j, tlsState.VerifiedChains[i][j].Subject.Names)
+				}
+			}
+		}
+	}
+
 }
 
 func handleClient(conn net.Conn) {

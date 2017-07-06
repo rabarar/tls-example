@@ -4,6 +4,9 @@
 *.pem
 *.raw
 
+src
+bin
+pkg
 client
 gen
 server

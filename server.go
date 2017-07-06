@@ -22,10 +22,14 @@ const (
 
 func main() {
 
-	var useTLS bool
-	flgCACert := flag.String("ca", "ca_cert", "certificate auth cert file prefix (without .raw or .pem)")
-	flgCAKey := flag.String("key", "ca_key", "certificate  key file prefix (without .raw or .pem)")
+	var useTLS, useCACert bool
+	flgCACert := flag.String("ca_cert", "ca_cert", "certificate auth cert file prefix (without .raw or .pem)")
+	flgCAKey := flag.String("ca_key", "ca_key", "certificate  key file prefix (without .raw or .pem)")
+
+	flgServerCert := flag.String("s_cert", "s_cert", "certificate auth cert file prefix (without .raw or .pem)")
+	flgServerKey := flag.String("s_key", "s_key", "certificate  key file prefix (without .raw or .pem)")
 	flag.BoolVar(&useTLS, "tls", false, "use tls if true or https")
+	flag.BoolVar(&useCACert, "ca", false, "use CA Cert for ListenAndServer https")
 
 	flag.Parse()
 
@@ -40,23 +44,58 @@ func main() {
 		log.Printf("failed to parse %s: %s\n", *flgCACert+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
+
+	// Read the RAW key
 	priv_b, err := ioutil.ReadFile(*flgCAKey + RAW_EXTENSION)
 	if err != nil {
 		log.Printf("failed to read %s: %s\n", *flgCAKey+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
+
+	// Convert the key ...
 	priv, err := x509.ParsePKCS1PrivateKey(priv_b)
 	if err != nil {
 		log.Printf("failed to parse %s: %s\n", *flgCAKey+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
 
+	// Create a new Cert Pool and add the CA cert
 	pool := x509.NewCertPool()
 	pool.AddCert(ca)
 
-	cert := tls.Certificate{
-		Certificate: [][]byte{ca_b},
-		PrivateKey:  priv,
+	// Read the Server Cert
+	var cert tls.Certificate
+	if useCACert {
+		cert = tls.Certificate{
+			Certificate: [][]byte{ca_b},
+			PrivateKey:  priv,
+		}
+	} else {
+
+		ca_b, err := ioutil.ReadFile(*flgServerCert + RAW_EXTENSION)
+		if err != nil {
+			log.Printf("failed to read %s: %s\n", *flgServerCert+RAW_EXTENSION, err)
+			os.Exit(1)
+		}
+
+		// Read the RAW key
+		priv_b, err := ioutil.ReadFile(*flgServerKey + RAW_EXTENSION)
+		if err != nil {
+			log.Printf("failed to read %s: %s\n", *flgServerKey+RAW_EXTENSION, err)
+			os.Exit(1)
+		}
+
+		// Convert the key ...
+		priv, err := x509.ParsePKCS1PrivateKey(priv_b)
+		if err != nil {
+			log.Printf("failed to parse %s: %s\n", *flgCAKey+RAW_EXTENSION, err)
+			os.Exit(1)
+		}
+
+		cert = tls.Certificate{
+			Certificate: [][]byte{ca_b},
+			PrivateKey:  priv,
+		}
 	}
 
 	config := tls.Config{
@@ -95,17 +134,31 @@ func main() {
 			ConnState:      stateMonitor,
 		}
 
-		log.Printf("HTTP TLS server: listening with Cert:%s, Key:%s\n", *flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+		if useCACert {
+			log.Printf("HTTP TLS server: listening with Cert:%s, Key:%s\n", *flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+		} else {
+			log.Printf("HTTP TLS server: listening with Cert:%s, Key:%s\n", *flgServerCert+PEM_EXTENSION, *flgServerKey+PEM_EXTENSION)
+		}
 
 		// add handler to default service mux
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 		})
 
-		err := s.ListenAndServeTLS(*flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
-		if err != nil {
-			log.Printf("failed to ListenAndServerTLS: %s\n", err)
+		if useCACert {
+			log.Printf("using CA Certificate...\n")
+			err := s.ListenAndServeTLS(*flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+			if err != nil {
+				log.Printf("failed to ListenAndServerTLS: %s\n", err)
+			}
+		} else {
+			log.Printf("using Server Certificate...\n")
+			err := s.ListenAndServeTLS(*flgServerCert+PEM_EXTENSION, *flgServerKey+PEM_EXTENSION)
+			if err != nil {
+				log.Printf("failed to ListenAndServerTLS: %s\n", err)
+			}
 		}
+
 	}
 }
 

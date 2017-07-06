@@ -66,39 +66,39 @@ func main() {
 	CACert, err := x509.CreateCertificate(rand.Reader, ca, ca, pub, priv)
 
 	if err != nil {
-		log.Println("create ca failed", err)
+		log.Printf("create ca failed", err)
 		os.Exit(1)
 	}
 
 	// write the CA cert in PEM format
 	CAFile := "ca_cert"
-	log.Println("write to", CAFile)
+	log.Printf("write to %s", CAFile)
 	err = overwrite(CAFile+PEM_EXTENSION, byteToPEM(CACert, PEM_CERTIFICATE), PUB_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", CAFile+PEM_EXTENSION, err)
+		log.Printf("failed to write %s: %s", CAFile+PEM_EXTENSION, err)
 		os.Exit(1)
 	}
 
 	err = overwrite(CAFile+RAW_EXTENSION, CACert, PUB_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", CAFile+RAW_EXTENSION, err)
+		log.Printf("failed to write \"%s\": %s", CAFile+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
 
 	// write the CA private key in PEM format
 	CAPrivFile := "ca_key"
 	priv_b := x509.MarshalPKCS1PrivateKey(priv)
-	log.Println("write to", CAPrivFile)
+	log.Printf("write to", CAPrivFile)
 
 	err = overwrite(CAPrivFile+PEM_EXTENSION, byteToPEM(priv_b, PEM_PRIVATE_KEY), PRIV_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", CAPrivFile+PEM_EXTENSION, err)
+		log.Printf("failed to write \"%s\": %s", CAPrivFile+PEM_EXTENSION, err)
 		os.Exit(1)
 	}
 
 	err = overwrite(CAPrivFile+RAW_EXTENSION, priv_b, PRIV_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", CAPrivFile+PEM_EXTENSION, err)
+		log.Printf("failed to write \"%s\": %s", CAPrivFile+PEM_EXTENSION, err)
 		os.Exit(1)
 	}
 
@@ -133,40 +133,40 @@ func main() {
 	clientPubKey := &clientKey.PublicKey
 	clientCertRaw, err2 := x509.CreateCertificate(rand.Reader, clientCert, ca, clientPubKey, priv)
 	if err2 != nil {
-		log.Println("create cert2 failed", err2)
+		log.Printf("create cert2 failed", err2)
 		os.Exit(1)
 	}
 
 	// Write the client Cert to PEM file
 	clientCertFile := "client_cert"
-	log.Println("write to", clientCertFile)
+	log.Printf("write to", clientCertFile)
 
 	err = overwrite(clientCertFile+PEM_EXTENSION, byteToPEM(clientCertRaw, PEM_CERTIFICATE), PUB_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", clientCertFile+PEM_EXTENSION, err)
+		log.Printf("failed to write \"%s\": %s", clientCertFile+PEM_EXTENSION, err)
 		os.Exit(1)
 	}
 
 	err = overwrite(clientCertFile+RAW_EXTENSION, clientCertRaw, PUB_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", clientCertFile+RAW_EXTENSION, err)
+		log.Printf("failed to write \"%s\": %s", clientCertFile+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
 
 	// Write the client private Key to PEM file
 	clientPrivKeyFile := "client_key"
 	ClientPrivateKeyRaw := x509.MarshalPKCS1PrivateKey(clientKey)
-	log.Println("write to", clientPrivKeyFile)
+	log.Printf("write to", clientPrivKeyFile)
 
 	err = overwrite(clientPrivKeyFile+PEM_EXTENSION, byteToPEM(ClientPrivateKeyRaw, PEM_PRIVATE_KEY), PRIV_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", clientPrivKeyFile+PEM_EXTENSION, err)
+		log.Printf("failed to write \"%s\": %s", clientPrivKeyFile+PEM_EXTENSION, err)
 		os.Exit(1)
 	}
 
 	err = overwrite(clientPrivKeyFile+RAW_EXTENSION, ClientPrivateKeyRaw, PRIV_PERMS)
 	if err != nil {
-		log.Println("failed to write \"%s\": %s", clientPrivKeyFile+RAW_EXTENSION, err)
+		log.Printf("failed to write \"%s\": %s", clientPrivKeyFile+RAW_EXTENSION, err)
 		os.Exit(1)
 	}
 
@@ -175,7 +175,7 @@ func main() {
 	clientCertCheck, _ := x509.ParseCertificate(clientCertRaw)
 
 	err3 := clientCertCheck.CheckSignatureFrom(caCheck)
-	log.Println("check signature", err3 == nil)
+	log.Printf("check signature", err3 == nil)
 }
 
 // TODO - openssl wont convert if ASN's are added

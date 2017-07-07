@@ -106,6 +106,12 @@ func main() {
 	config.Rand = rand.Reader
 
 	if useTLS {
+		if useCACert {
+			log.Printf("TLS server: listening with Cert:%s, Key:%s\n", *flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+		} else {
+			log.Printf("TLS server: listening with Cert:%s, Key:%s\n", *flgServerCert+PEM_EXTENSION, *flgServerKey+PEM_EXTENSION)
+		}
+
 		service := "0.0.0.0:8443"
 		listener, err := tls.Listen("tcp", service, &config)
 		if err != nil {
@@ -135,9 +141,9 @@ func main() {
 		}
 
 		if useCACert {
-			log.Printf("HTTP TLS server: listening with Cert:%s, Key:%s\n", *flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
+			log.Printf("HTTPS server: listening with Cert:%s, Key:%s\n", *flgCACert+PEM_EXTENSION, *flgCAKey+PEM_EXTENSION)
 		} else {
-			log.Printf("HTTP TLS server: listening with Cert:%s, Key:%s\n", *flgServerCert+PEM_EXTENSION, *flgServerKey+PEM_EXTENSION)
+			log.Printf("HTTPS server: listening with Cert:%s, Key:%s\n", *flgServerCert+PEM_EXTENSION, *flgServerKey+PEM_EXTENSION)
 		}
 
 		// add handler to default service mux

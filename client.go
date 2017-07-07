@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	var useSkip bool
+	flag.BoolVar(&useSkip, "skip", false, "Skip Insecure Verification")
 	flgCACert := flag.String("ca", "ca_cert.raw", "client raw cert file")
 	flgClientCert := flag.String("cert", "client_cert.raw", "client raw cert file")
 	flgClientKey := flag.String("key", "client_key.raw", "client key file")
@@ -55,7 +57,7 @@ func main() {
 
 	config := tls.Config{
 		Certificates:       []tls.Certificate{cert},
-		InsecureSkipVerify: false,
+		InsecureSkipVerify: useSkip,
 		RootCAs:            roots,
 	}
 	conn, err := tls.Dial("tcp", "127.0.0.1:8443", &config)
@@ -73,7 +75,7 @@ func main() {
 	log.Println("client: handshake: ", state.HandshakeComplete)
 	log.Println("client: mutual: ", state.NegotiatedProtocolIsMutual)
 
-	message := "Hello\n"
+	message := "Hello from the client\n"
 	n, err := io.WriteString(conn, message)
 	if err != nil {
 		log.Fatalf("client: write: %s", err)
